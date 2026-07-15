@@ -12,3 +12,7 @@ docx2txt
 google-genai
 jq
 langchain_experimental
+networkx
+scikit-learn
+langchain-ollama
+flask

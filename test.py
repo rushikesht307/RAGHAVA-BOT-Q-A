@@ -15,4 +15,5 @@ ch.para_chunk()
 r = Vectorizer(c)
 r.dense_vector()
 r.sparse_vector()
+r.load_or_create_graph_vectorstore()
 

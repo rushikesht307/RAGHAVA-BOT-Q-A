@@ -1,5 +1,6 @@
 .env
 .venv/
 dense_db/
-chroma_db/
 __pycache__/
+tfidf_retriever/
+graph.pkl

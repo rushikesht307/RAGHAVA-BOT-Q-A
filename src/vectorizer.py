@@ -1,9 +1,12 @@
+import os
+import networkx as nx
 from pathlib import Path
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 import pickle
 from langchain_community.retrievers import TFIDFRetriever
-from langchain_community.graph_vectorstores import CassandraGraphVectorStore
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 
 
@@ -45,16 +48,74 @@ class Vectorizer:
             print("Sparse vector created")
 
 
-
-    def create_graph_vectorstore(chunks):
+    def load_or_create_graph_vectorstore(self, threshold=0.5):
+        GRAPH_PATH = "graph.pkl"
+        VECTOR_DB_PATH = "dense_db"
 
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        graph_store = CassandraGraphVectorStore.from_documents(
-            documents=chunks,
-            embedding=embeddings
+        os.makedirs("dense_db", exist_ok=True)
+
+        # Load existing databases
+        if os.path.exists(GRAPH_PATH):
+
+            vector_store = Chroma(
+                persist_directory=VECTOR_DB_PATH,
+                embedding_function=embeddings
+            )
+
+            with open(GRAPH_PATH, "rb") as file:
+                graph = pickle.load(file)
+
+            print("Graph vector store loaded")
+
+            return vector_store, graph
+
+        # Create vector database
+        vector_store = Chroma.from_documents(
+            documents=self.chunks,
+            embedding=embeddings,
+            persist_directory=VECTOR_DB_PATH
         )
-        print("Graph vector Created")
-        return graph_store
+
+        # Create graph
+        graph = nx.Graph()
+
+        texts = [chunk.page_content for chunk in self.chunks]
+        vectors = embeddings.embed_documents(texts)
+
+        # Add nodes
+        for i, chunk in enumerate(self.chunks):
+            graph.add_node(
+                i,
+                text=chunk.page_content,
+                metadata=chunk.metadata
+            )
+
+        # Add similarity edges
+        for i in range(len(self.chunks)):
+            for j in range(i + 1, len(self.chunks)):
+
+                score = cosine_similarity(
+                    [vectors[i]],
+                    [vectors[j]]
+                )[0][0]
+
+                if score >= threshold:
+                    graph.add_edge(
+                        i,
+                        j,
+                        weight=float(score)
+                    )
+
+        # Save graph locally
+        with open(GRAPH_PATH, "wb") as file:
+            pickle.dump(graph, file)
+
+        print("Graph vector store created")
+
+        return vector_store, graph
+
+            
