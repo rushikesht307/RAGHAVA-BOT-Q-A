@@ -5,7 +5,7 @@ import os
 model = "gemini-3.1-flash-lite"
 
 
-def main(sys_prompt):
+def geminigen(sys_prompt):
     load_dotenv()
 
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

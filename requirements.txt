@@ -16,3 +16,4 @@ networkx
 scikit-learn
 langchain-ollama
 flask
+reportlab
