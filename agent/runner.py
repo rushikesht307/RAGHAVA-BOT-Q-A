@@ -9,39 +9,60 @@ from src.chunking import chunker
 
 print("Loading Vector Database...")
 
-# vectorizer = Vectorizer()
-# vector_db = vectorizer.dense_vector()
-# retriever = mainretriever()
-
 ml = MainLoader()
 doc = ml.document_loader()
+
 ch = chunker(doc)
 ro = ch.recursive_overlap()
 
-vt=Vectorizer(ro)
-vector_db=vt.dense_vector()
+vt = Vectorizer(ro)
+vector_db = vt.dense_vector()
+
 rt = mainretriever()
 
 print("Vector Database Loaded Successfully!")
 
 
-def execute_tool(tool_call):
+def execute_tool(actions):
 
-    tool_name = tool_call["tool"]
+    results = []
 
-    if tool_name == "create_pdf":
-        return create_pdf(tool_call["content"])
+    for action in actions:
 
-    elif tool_name == "create_text_file":
-        return create_text_file(tool_call["content"])
+        tool_name = action["tool"]
 
-    elif tool_name == "send_email":
-        return send_email(
-            tool_call["receiver_email"],
-            tool_call["content"]
+        if tool_name == "create_pdf":
+
+            result = create_pdf(
+                action["content"]
+            )
+
+        elif tool_name == "create_text_file":
+
+            result = create_text_file(
+                action["content"]
+            )
+
+        elif tool_name == "send_email":
+
+            result = send_email(
+                receiver_email=action["receiver_email"],
+                content=action["content"],
+                attachments=action.get("attachments", [])
+            )
+
+        else:
+
+            result = f"Unknown tool: {tool_name}"
+
+        results.append(
+            {
+                "tool": tool_name,
+                "result": result
+            }
         )
 
-    return f"Unknown tool: {tool_name}"
+    return results
 
 
 def main():
@@ -76,29 +97,92 @@ User Query:
 {user_query}
 
 Instructions:
-1. Read the retrieved context carefully.
-2. Use only the retrieved context to generate the content.
-3. Select the appropriate tool.
-4. Return ONLY valid JSON.
-5. Do not return markdown.
-6. Do not explain your reasoning.
+
+1. Use ONLY the retrieved context.
+2. Decide which tools are needed.
+3. A user may require one or multiple tools.
+4. If email contains attachments, always create the files BEFORE sending email.
+5. Return ONLY valid JSON.
+6. Do NOT return markdown.
+7. Do NOT explain reasoning.
 
 Examples:
 
-{{
-    "tool": "create_pdf",
-    "content": "Generated content using the retrieved context."
-}}
+PDF only:
 
 {{
-    "tool": "create_text_file",
-    "content": "Generated content using the retrieved context."
+    "actions": [
+        {{
+            "tool": "create_pdf",
+            "content": "generated content"
+        }}
+    ]
 }}
 
+Text File only:
+
 {{
-    "tool": "send_email",
-    "receiver_email": "abc@gmail.com",
-    "content": "Generated email using the retrieved context."
+    "actions": [
+        {{
+            "tool": "create_text_file",
+            "content": "generated content"
+        }}
+    ]
+}}
+
+Email only:
+
+{{
+    "actions": [
+        {{
+            "tool": "send_email",
+            "receiver_email": "abc@gmail.com",
+            "content": "generated content"
+        }}
+    ]
+}}
+
+PDF + Email:
+
+{{
+    "actions": [
+        {{
+            "tool": "create_pdf",
+            "content": "generated content"
+        }},
+        {{
+            "tool": "send_email",
+            "receiver_email": "abc@gmail.com",
+            "content": "generated content",
+            "attachments": [
+                "output.pdf"
+            ]
+        }}
+    ]
+}}
+
+PDF + TXT + Email:
+
+{{
+    "actions": [
+        {{
+            "tool": "create_pdf",
+            "content": "generated content"
+        }},
+        {{
+            "tool": "create_text_file",
+            "content": "generated content"
+        }},
+        {{
+            "tool": "send_email",
+            "receiver_email": "abc@gmail.com",
+            "content": "Please find the attached files.",
+            "attachments": [
+                "output.pdf",
+                "output.txt"
+            ]
+        }}
+    ]
 }}
 """
 
@@ -107,12 +191,16 @@ Examples:
         print("\nGemini Response:")
         print(response)
 
-        tool_call = json.loads(response)
+        response_json = json.loads(response)
 
-        result = execute_tool(tool_call)
+        results = execute_tool(
+            response_json["actions"]
+        )
 
-        print("\nResult:")
-        print(result)
+        print("\nResults:")
+
+        for result in results:
+            print(result)
 
 
 if __name__ == "__main__":
