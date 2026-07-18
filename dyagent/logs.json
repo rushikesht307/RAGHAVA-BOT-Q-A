@@ -1,0 +1,77 @@
+{
+  "create_pdf": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a PDF file using the provided content."
+  },
+  "create_text_file": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a text file using the provided content."
+  },
+  "create_html_file": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates an HTML file using the provided content."
+  },
+  "create_csv_file": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a CSV file using the provided content."
+  },
+  "create_json_file": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a JSON file using the provided content."
+  },
+  "create_markdown_file": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a markdown file using the provided content."
+  },
+  "save_backup": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a backup file."
+  },
+  "word_count": {
+    "attributes": [
+      "content"
+    ],
+    "description": "Returns total word count."
+  },
+  "character_count": {
+    "attributes": [
+      "content"
+    ],
+    "description": "Returns total character count."
+  },
+  "create_property_brochure": {
+    "attributes": [
+      "content",
+      "file_name"
+    ],
+    "description": "Creates a property brochure PDF."
+  },
+  "send_email": {
+    "attributes": [
+      "receiver_email",
+      "content"
+    ],
+    "description": "Sends email and automatically attaches files generated in the current request."
+  }
+}
